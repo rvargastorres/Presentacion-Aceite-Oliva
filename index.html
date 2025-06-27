@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AOVE Premium - Oro Líquido de España</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;400;500;600&display=swap');
+        
+        :root {
+            --primary: #8a6d3b;
+            --secondary: #4a6b2a;
+            --accent: #d4a017;
+            --light: #f8f5e9;
+            --dark: #1a1a1a;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark-mode {
+            background-color: var(--dark);
+            color: var(--light);
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .slide {
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            position: absolute;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .zoom-container {
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .zoom-container img {
+            transition: transform 0.5s ease;
+            display: block;
+            width: 100%;
+        }
+        
+        .zoom-container:hover img {
+            transform: scale(1.1);
+        }
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 5px;
+            background: var(--accent);
+            width: 0%;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(138, 109, 59, 0.7);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background: var(--accent);
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .prev-btn {
+            left: 20px;
+        }
+        
+        .next-btn {
+            right: 20px;
+        }
+        
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(138, 109, 59, 0.7);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            z-index: 100;
+        }
+        
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 0 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .dark-mode .testimonial-card {
+            background: rgba(26, 26, 26, 0.7);
+        }
+        
+        .chatbot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .chatbot-panel {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .dark-mode .chatbot-panel {
+            background: #2d2d2d;
+            color: white;
+        }
+        
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .chat-input {
+            padding: 10px;
+            display: flex;
+            border-top: 1px solid #eee;
+        }
+        
+        .dark-mode .chat-input {
+            border-top: 1px solid #444;
+        }
+        
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 10px;
+        }
+        
+        .dark-mode .chat-input input {
+            background: #333;
+            color: white;
+            border-color: #555;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        
+        .bot-message {
+            background: #f0f0f0;
+            align-self: flex-start;
+        }
+        
+        .dark-mode .bot-message {
+            background: #444;
+        }
+        
+        .user-message {
+            background: var(--accent);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        
+        .pagination {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .pagination-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(138, 109, 59, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination-dot.active {
+            background: var(--accent);
+            transform: scale(1.3);
+        }
+        
+        .certification-badge {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .dark-mode .certification-badge {
+            background: #333;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease forwards;
+        }
+        
+        .delay-100 {
+            animation-delay: 0.1s;
+        }
+        
+        .delay-200 {
+            animation-delay: 0.2s;
+        }
+        
+        .delay-300 {
+            animation-delay: 0.3s;
+        }
+        
+        .delay-400 {
+            animation-delay: 0.4s;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .dark-mode .comparison-table th, 
+        .dark-mode .comparison-table td {
+            border-bottom: 1px solid #444;
+        }
+        
+        .comparison-table th {
+            background-color: rgba(138, 109, 59, 0.1);
+            font-weight: 600;
+        }
+        
+        .dark-mode .comparison-table th {
+            background-color: rgba(138, 109, 59, 0.3);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .highlight {
+            background-color: rgba(212, 160, 23, 0.2);
+            font-weight: 600;
+        }
+        
+        .dark-mode .highlight {
+            background-color: rgba(212, 160, 23, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .slide {
+                padding: 1rem;
+            }
+            
+            .testimonial-card {
+                padding: 1rem;
+                min-height: 250px;
+            }
+            
+            .chatbot-panel {
+                width: 280px;
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de progreso -->
+    <div class="progress-bar"></div>
+    
+    <!-- Botones de navegación -->
+    <button class="nav-btn prev-btn">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <button class="nav-btn next-btn">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+    
+    <!-- Botón modo oscuro -->
+    <button class="dark-mode-toggle">
+        <i class="fas fa-moon"></i>
+    </button>
+    
+    <!-- Botón chatbot -->
+    <div class="chatbot">
+        <i class="fas fa-comment"></i>
+    </div>
+    
+    <!-- Panel chatbot -->
+    <div class="chatbot-panel">
+        <div class="chat-header">Asistente para Inversores</div>
+        <div class="chat-messages">
+            <div class="message bot-message">¡Hola! Soy tu asistente para inversiones en AOVE. ¿En qué puedo ayudarte?</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" placeholder="Escribe tu pregunta...">
+            <button class="bg-green-600 text-white px-3 py-1 rounded-lg"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    
+    <!-- Paginación -->
+    <div class="pagination">
+        <div class="pagination-dot active" data-slide="0"></div>
+        <div class="pagination-dot" data-slide="1"></div>
+        <div class="pagination-dot" data-slide="2"></div>
+        <div class="pagination-dot" data-slide="3"></div>
+        <div class="pagination-dot" data-slide="4"></div>
+        <div class="pagination-dot" data-slide="5"></div>
+        <div class="pagination-dot" data-slide="6"></div>
+    </div>
+    
+    <!-- Diapositivas -->
+    <div class="slide active" id="slide-0">
+        <div class="absolute inset-0 bg-cover bg-center opacity-30" style="background-image: url('https://images.unsplash.com/photo-1605244863941-8beb7b1e7b0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2000&q=80');"></div>
+        <div class="relative z-10 w-full max-w-4xl">
+            <div class="animate-fadeIn">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 text-[#8a6d3b]">Inversión en AOVE Premium</h1>
+                <h2 class="text-3xl md:text-4xl font-semibold mb-8 text-[#4a6b2a]">Oro Líquido de España</h2>
+                <p class="text-xl md:text-2xl mb-10 font-medium">Oportunidad única en el mercado internacional</p>
+            </div>
+            <div class="mt-16 animate-fadeIn delay-200">
+                <div class="inline-block bg-[#d4a017] text-white px-8 py-4 rounded-full text-xl font-semibold shadow-lg">
+                    Comenzar presentación
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="slide" id="slide-1">
+        <div class="w-full max-w-6xl">
+            <h2 class="text-3xl md:text-4xl font-bold mb-8 text-[#4a6b2a]">Mercado Global de AOVE</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                <div class="animate-fadeIn">
+                    <div class="bg-white p-6 rounded-xl shadow-xl dark:bg-gray-800">
+                        <canvas id="marketChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <div class="text-left animate-fadeIn delay-200">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold mb-3 text-[#8a6d3b]">Tendencias Clave</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-arrow-up text-green-500 mt-1 mr-2"></i>
+                                <span>Crecimiento anual del 5.2% en consumo premium</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-globe-americas text-blue-500 mt-1 mr-2"></i>
+                                <span>EE.UU. lidera importaciones con aumento del 12% en 2023</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-seedling text-[#4a6b2a] mt-1 mr-2"></i>
+                                <span>Demanda de productos orgánicos crece un 18% anual</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-wine-bottle text-[#8a6d3b] mt-1 mr-2"></i>
+                                <span>Mercado premium alcanza €15.3B en 2023</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-[#f8f5e9] p-4 rounded-lg border-l-4 border-[#d4a017] dark:bg-gray-700">
+                        <p class="italic">"El mercado premium de AOVE representa la mayor oportunidad de crecimiento en el sector alimentario mediterráneo" - Informe Mercacei 2023</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="slide" id="slide-2">
+        <div class="w-full max-w-6xl">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12 text-[#4a6b2a]">Certificaciones de Calidad</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <div class="animate-fadeIn">
+                    <div class="certification-badge mb-6">
+                        <i class="fas fa-leaf text-4xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-[#8a6d3b]">Certificación Ecológica</h3>
+                    <p>Producción sostenible sin pesticidas ni químicos. Certificado por la UE.</p>
+                </div>
+                
+                <div class="animate-fadeIn delay-200">
+                    <div class="certification-badge mb-6">
+                        <i class="fas fa-award text-4xl text-[#d4a017]"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-[#8a6d3b]">D.O.P. Baena</h3>
+                    <p>Denominación de Origen Protegida que garantiza origen y calidad superior.</p>
+                </div>
+                
+                <div class="animate-fadeIn delay-400">
+                    <div class="certification-badge mb-6">
+                        <i class="fas fa-star-and-crescent text-4xl text-[#4a6b2a]"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-[#8a6d3b]">Certificación Halal</h3>
+                    <p>Aprobado para mercados de Medio Oriente y países musulmanes.</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mt-8">
+                <div class="animate-fadeIn">
+                    <div class="zoom-container">
+                        <img src="https://s.alicdn.com/@sc04/kf/H25e6b832ef114f878ec069475ed6c012N.jpg_720x720q50.jpg" alt="Aceitunas y aceite de oliva" class="rounded-lg">
+                    </div>
+                </div>
+                
+                <div class="text-left animate-fadeIn delay-200">
+                    <h3 class="text-2xl font-bold mb-4 text-[#8a6d3b]">Acceso a Mercados Estratégicos</h3>
+                    <p class="mb-4">Nuestras certificaciones nos permiten exportar a más de 35 países, incluyendo:</p>
+                    <ul class="grid grid-cols-2 gap-3">
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Emiratos Árabes</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Japón</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Estados Unidos</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Canadá</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Corea del Sur</li>
+                        <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Australia</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="slide" id="slide-3">
+        <div class="w-full max-w-6xl">
+            <h2 class="text-3xl md:text-4xl font-bold mb-10 text-[#4a6b2a]">Ventajas Competitivas</h2>
+            
+            <div class="mb-12">
+                <div class="bg-white p-6 rounded-xl shadow-xl dark:bg-gray-800 animate-fadeIn">
+                    <table class="comparison-table w-full">
+                        <thead>
+                            <tr>
+                                <th>Característica</th>
+                                <th>Nuestro AOVE</th>
+                                <th>Competidor Italiano</th>
+                                <th>Competidor Griego</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Acidez (%)</td>
+                                <td class="highlight">≤0.2%</td>
+                                <td>0.3-0.5%</td>
+                                <td>0.4-0.8%</td>
+                            </tr>
+                            <tr>
+                                <td>Polifenoles (mg/kg)</td>
+                                <td class="highlight">≥550</td>
+                                <td>300-400</td>
+                                <td>250-350</td>
+                            </tr>
+                            <tr>
+                                <td>Proceso de Extracción</td>
+                                <td class="highlight">Primera presión en frío</td>
+                                <td>Mezcla de prensas</td>
+                                <td>Prensado tradicional</td>
+                            </tr>
+                            <tr>
+                                <td>Certificaciones</td>
+                                <td class="highlight">D.O.P., Bio, Halal</td>
+                                <td>D.O.P.</td>
+                                <td>D.O.P.</td>
+                            </tr>
+                            <tr>
+                                <td>Tiempo de cosecha a extracción</td>
+                                <td class="highlight">≤4 horas</td>
+                                <td>8-12 horas</td>
+                                <td>12-24 horas</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                <div class="text-left animate-fadeIn">
+                    <h3 class="text-2xl font-bold mb-4 text-[#8a6d3b]">Innovación en Producción</h3>
+                    <p class="mb-4">Nuestro proceso exclusivo de extracción en frío preserva un 20% más de polifenoles que la media del mercado, aumentando los beneficios para la salud y el sabor.</p>
+                    <div class="flex items-center mb-3">
+                        <div class="w-3/4 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                            <div class="bg-[#d4a017] h-2.5 rounded-full" style="width: 95%"></div>
+                        </div>
+                        <span class="ml-3 font-bold">95% Extracción en frío</span>
+                    </div>
+                    <div class="flex items-center mb-3">
+                        <div class="w-3/4 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                            <div class="bg-[#4a6b2a] h-2.5 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <span class="ml-3 font-bold">85% Oliva temprana</span>
+                    </div>
+                </div>
+                
+                <div class="animate-fadeIn delay-200">
+                    <div class="zoom-container">
+                        <img src="https://s.alicdn.com/@sc04/kf/HTB1wDYzXh2rK1RkSnhJq6ykdpXai.jpg_720x720q50.jpg" alt="Botella premium de aceite de oliva" class="rounded-lg">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="slide" id="slide-4">
+        <div class="w-full max-w-4xl">
+            <h2 class="text-3xl md:text-4xl font-bold mb-10 text-[#4a6b2a]">Modelo de Negocio</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
+                <div class="bg-[#f8f5e9] p-8 rounded-xl dark:bg-gray-800 animate-fadeIn">
+                    <div class="text-5xl font-bold text-[#d4a017] mb-4">€12-28</div>
+                    <h3 class="text-2xl font-bold mb-3 text-[#8a6d3b]">Precio por Litro</h3>
+                    <p>Segmento premium según formato y mercado objetivo</p>
+                    <ul class="mt-4 space-y-2">
+                        <li class="flex items-center"><i class="fas fa-wine-bottle text-[#8a6d3b] mr-2"></i> Botella 250ml: €12</li>
+                        <li class="flex items-center"><i class="fas fa-box text-[#8a6d3b] mr-2"></i> Caja regalo 500ml: €22</li>
+                        <li class="flex items-center"><i class="fas fa-gift text-[#8a6d3b] mr-2"></i> Edición limitada: €28</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-[#f8f5e9] p-8 rounded-xl dark:bg-gray-800 animate-fadeIn delay-200">
+                    <div class="text-5xl font-bold text-[#4a6b2a] mb-4">18 meses</div>
+                    <h3 class="text-2xl font-bold mb-3 text-[#8a6b3b]">ROI Proyectado</h3>
+                    <p>Periodo de recuperación de inversión</p>
+                    <div class="mt-6">
+                        <div class="flex justify-between mb-1">
+                            <span>Inversión inicial</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-4">
+                            <div class="bg-gray-400 h-2.5 rounded-full" style="width: 100%"></div>
+                        </div>
+                        <div class="flex justify-between mb-1">
+                            <span>Retorno a 18 meses</span>
+                            <span>130%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                            <div class="bg-[#d4a017] h-2.5 rounded-full" style="width: 130%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="animate-fadeIn delay-400">
+                <h3 class="text-2xl font-bold mb-6 text-[#8a6d3b]">Proceso de Producción</h3>
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/6rWqgLqXl8I" title="Proceso de producción de AOVE" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="slide" id="slide-5">
+        <div class="w-full max-w-4xl">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12 text-[#4a6b2a]">Testimonios de Inversores</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="testimonial-card animate-fadeIn">
+                    <div>
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-full bg-[#d4a017] flex items-center justify-center text-white font-bold">AM</div>
+                            <div class="ml-3">
+                                <div class="font-bold">Ana Martínez</div>
+                                <div class="text-sm">Inversora desde 2021</div>
+                            </div>
+                        </div>
+                        <p class="italic">"Invertí 50K€ en 2023 y ya tengo un 30% de retorno. El mercado premium de AOVE tiene un potencial enorme."</p>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card animate-fadeIn delay-200">
+                    <div>
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-full bg-[#4a6b2a] flex items-center justify-center text-white font-bold">JR</div>
+                            <div class="ml-3">
+                                <div class="font-bold">James Robinson</div>
+                                <div class="text-sm">Fondo de Inversión</div>
+                            </div>
+                        </div>
+                        <p class="italic">"La combinación de calidad superior y certificaciones internacionales hace de esta inversión una apuesta segura."</p>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card animate-fadeIn delay-400">
+                    <div>
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-full bg-[#8a6d3b] flex items-center justify-center text-white font-bold">LC</div>
+                            <div class="ml-3">
+                                <div class="font-bold">Li Chen</div>
+                                <div class="text-sm">Mercado Asiático</div>
+                            </div>
+                        </div>
+                        <p class="italic">"La certificación Halal nos ha permitido expandirnos a mercados de Medio Oriente con márgenes excelentes."</p>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="animate-fadeIn">
+                <div class="zoom-container max-w-md mx-auto">
+                    <img src="https://s.alicdn.com/@sc04/kf/Hf23c669629ae474fbc6cc121bcfedd65p.jpg_720x720q50.jpg" alt="Variedad de botellas de aceite de oliva" class="rounded-lg">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="slide" id="slide-6">
+        <div class="w-full max-w-2xl">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6 text-[#4a6b2a]">Conviértase en Inversor</h2>
+            <p class="text-xl mb-10">Únase a nuestra red de inversores internacionales</p>
+            
+            <div class="bg-white p-8 rounded-xl shadow-xl dark:bg-gray-800 w-full animate-fadeIn">
+                <form id="investorForm" class="space-y-6">
+                    <div>
+                        <label class="block text-left mb-2 font-medium">Nombre completo</label>
+                        <input type="text" class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4a017] dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-left mb-2 font-medium">Correo electrónico</label>
+                        <input type="email" class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4a017] dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-left mb-2 font-medium">País</label>
+                        <select class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4a017] dark:bg-gray-700 dark:border-gray-600">
+                            <option>Seleccione un país</option>
+                            <option>Estados Unidos</option>
+                            <option>Canadá</option>
+                            <option>Reino Unido</option>
+                            <option>Alemania</option>
+                            <option>Japón</option>
+                            <option>Emiratos Árabes</option>
+                            <option>Australia</option>
+                            <option>Otro</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-left mb-2 font-medium">Nivel de interés</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="interest" class="form-radio text-[#d4a017]" value="info">
+                                <span class="ml-2">Solo información</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="interest" class="form-radio text-[#d4a017]" value="meeting">
+                                <span class="ml-2">Reunión informativa</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="interest" class="form-radio text-[#d4a017]" value="invest">
+                                <span class="ml-2">Inversión inmediata</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-left mb-2 font-medium">Mensaje (opcional)</label>
+                        <textarea class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d4a017] dark:bg-gray-700 dark:border-gray-600" rows="3"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-[#d4a017] text-white py-4 rounded-lg font-bold text-lg hover:bg-[#b88c14] transition duration-300">
+                        Enviar solicitud
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables globales
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.pagination-dot');
+            const progressBar = document.querySelector('.progress-bar');
+            const prevBtn = document.querySelector('.prev-btn');
+            const nextBtn = document.querySelector('.next-btn');
+            const darkModeToggle = document.querySelector('.dark-mode-toggle');
+            const chatbotBtn = document.querySelector('.chatbot');
+            const chatbotPanel = document.querySelector('.chatbot-panel');
+            const chatInput = chatbotPanel.querySelector('input');
+            const chatSendBtn = chatbotPanel.querySelector('button');
+            const chatMessages = chatbotPanel.querySelector('.chat-messages');
+            
+            let currentSlide = 0;
+            
+            // Inicializar gráfico
+            const marketChart = new Chart(document.getElementById('marketChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['EE.UU.', 'Japón', 'Unión Europea', 'Medio Oriente', 'Asia Pacífico'],
+                    datasets: [{
+                        label: 'Demanda (millones €)',
+                        data: [1250, 680, 3200, 890, 540],
+                        backgroundColor: [
+                            'rgba(138, 109, 59, 0.7)',
+                            'rgba(74, 107, 42, 0.7)',
+                            'rgba(212, 160, 23, 0.7)',
+                            'rgba(106, 90, 205, 0.7)',
+                            'rgba(60, 179, 113, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(138, 109, 59, 1)',
+                            'rgba(74, 107, 42, 1)',
+                            'rgba(212, 160, 23, 1)',
+                            'rgba(106, 90, 205, 1)',
+                            'rgba(60, 179, 113, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Demanda de AOVE Premium por Región (2023)',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Funciones de navegación
+            function showSlide(index) {
+                // Asegurarse de que el índice esté dentro de los límites
+                if (index < 0) index = slides.length - 1;
+                if (index >= slides.length) index = 0;
+                
+                // Ocultar slide actual
+                slides[currentSlide].classList.remove('active');
+                dots[currentSlide].classList.remove('active');
+                
+                // Mostrar nuevo slide
+                currentSlide = index;
+                slides[currentSlide].classList.add('active');
+                dots[currentSlide].classList.add('active');
+                
+                // Actualizar barra de progreso
+                progressBar.style.width = `${(currentSlide / (slides.length - 1)) * 100}%`;
+                
+                // Actualizar gráfico si es necesario
+                if (currentSlide === 1) {
+                    marketChart.update();
+                }
+            }
+            
+            // Event listeners para navegación
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => showSlide(index));
+            });
+            
+            // Navegación con teclado
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') showSlide(currentSlide - 1);
+                if (e.key === 'ArrowRight') showSlide(currentSlide + 1);
+            });
+            
+            // Modo oscuro
+            darkModeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                darkModeToggle.innerHTML = document.body.classList.contains('dark-mode') ? 
+                    '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+            
+            // Chatbot
+            chatbotBtn.addEventListener('click', () => {
+                chatbotPanel.style.display = chatbotPanel.style.display === 'flex' ? 'none' : 'flex';
+            });
+            
+            chatSendBtn.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (message) {
+                    // Añadir mensaje de usuario
+                    const userMessage = document.createElement('div');
+                    userMessage.classList.add('message', 'user-message');
+                    userMessage.textContent = message;
+                    chatMessages.appendChild(userMessage);
+                    
+                    // Simular respuesta del bot
+                    setTimeout(() => {
+                        const botMessage = document.createElement('div');
+                        botMessage.classList.add('message', 'bot-message');
+                        
+                        // Respuestas posibles
+                        const responses = [
+                            "Nuestros volúmenes mínimos de inversión comienzan en €25,000.",
+                            "Ofrecemos un ROI proyectado del 30% en los primeros 18 meses.",
+                            "Contamos con certificaciones D.O.P., Bio y Halal para mercados internacionales.",
+                            "Puede programar una reunión informativa con nuestro equipo de inversiones.",
+                            "Nuestro proceso de producción garantiza la máxima calidad con acidez ≤0.2%.",
+                            "Exportamos a más de 35 países con márgenes premium."
+                        ];
+                        
+                        botMessage.textContent = responses[Math.floor(Math.random() * responses.length)];
+                        chatMessages.appendChild(botMessage);
+                        
+                        // Desplazar hacia el último mensaje
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }, 1000);
+                    
+                    // Limpiar entrada
+                    chatInput.value = '';
+                    
+                    // Desplazar hacia el último mensaje
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+            
+            // Manejo del formulario
+            document.getElementById('investorForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('¡Gracias por su interés! Nuestro equipo se pondrá en contacto con usted en las próximas 24 horas.');
+                this.reset();
+            });
+            
+            // Inicializar animaciones para el primer slide
+            const elements = document.querySelectorAll('.animate-fadeIn');
+            elements.forEach(el => {
+                el.style.opacity = 0;
+            });
+            
+            // Mostrar elementos animados cuando el slide está activo
+            function animateSlideElements() {
+                const currentSlideElements = slides[currentSlide].querySelectorAll('.animate-fadeIn');
+                currentSlideElements.forEach((el, i) => {
+                    setTimeout(() => {
+                        el.style.animation = 'fadeIn 0.8s ease forwards';
+                    }, i * 200);
+                });
+            }
+            
+            // Observar cambios en el slide para activar animaciones
+            animateSlideElements();
+            prevBtn.addEventListener('click', animateSlideElements);
+            nextBtn.addEventListener('click', animateSlideElements);
+            dots.forEach(dot => {
+                dot.addEventListener('click', animateSlideElements);
+            });
+        });
+    </script>
+</body>
+</html>
